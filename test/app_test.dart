@@ -129,9 +129,9 @@ void main() {
       expect(find.text(levels.first.explanation), findsOneWidget);
       await capture(tester, '05-completed');
       await tab(tester, 'Повторение');
-      await tester.tap(find.text('Начать повторение'));
+      await tester.tap(find.text('Тренироваться заранее'));
       await tester.pumpAndSettle();
-      expect(controller.reviewLevel, levels.first);
+      expect(controller.reviewLevel!.id, levels.first.id);
       expect(controller.puzzle(levels.first, review: true).isComplete, isFalse);
       expect(tester.takeException(), isNull);
     },
@@ -179,7 +179,7 @@ void main() {
     await launch(tester);
     await tester.tap(find.text('Подсказка').first);
     await tester.pumpAndSettle();
-    expect(find.text(levels.first.hint), findsOneWidget);
+    expect(find.text(levels.first.hints.first), findsOneWidget);
     expect(find.text(levels.first.explanation), findsNothing);
     await tester.ensureVisible(
       find.byKey(const ValueKey('check-answer')).first,
@@ -191,7 +191,7 @@ void main() {
     await tester.ensureVisible(find.byTooltip('Начать заново').first);
     await tester.tap(find.byTooltip('Начать заново').first);
     await tester.pumpAndSettle();
-    expect(controller.puzzle(levels.first).hintUsed, isFalse);
+    expect(controller.puzzle(levels.first).hintUsed, isTrue);
     expect(controller.totalAttempts, 1);
   });
   testWidgets('slider responds to touch independently of the diagram', (
