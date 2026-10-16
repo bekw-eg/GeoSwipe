@@ -1,0 +1,14 @@
+{
+    "name": "GeoSwipe",
+    "short_name": "GeoSwipe",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#0C1425",
+    "theme_color": "#0C1425",
+    "description": "Изучай геометрию через движение.",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+        { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+    ]
+}
