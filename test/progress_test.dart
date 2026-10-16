@@ -4,9 +4,8 @@ import 'package:geoswipe/core/app_controller.dart';
 import 'package:geoswipe/data/level_catalog.dart';
 import 'package:geoswipe/data/progress_repository.dart';
 import 'package:geoswipe/models/progress.dart';
-import 'package:geoswipe/models/level.dart';
-import 'package:geoswipe/core/geometry/geometry.dart';
 import 'support/memory_store.dart';
+import 'support/course_solutions.dart';
 
 void main() {
   late MemoryStore store;
@@ -104,14 +103,14 @@ void main() {
       controller.showHint(levels.first);
       controller.rotate(levels.first, 45);
       controller.submit(levels.first);
-      controller.changePage(2);
+      controller.changePage(1);
       await controller.persist();
       final restored = AppController(ProgressRepository(store));
       await restored.load();
       expect(restored.completedCount, 1);
       expect(restored.assistedCount, 1);
       expect(restored.totalAttempts, 1);
-      expect(restored.currentIndex, 2);
+      expect(restored.currentIndex, 1);
       restored.dispose();
     },
   );
@@ -119,14 +118,7 @@ void main() {
     'writes remain ordered when actions happen in quick succession',
     () async {
       for (final level in levels) {
-        switch (level.kind) {
-          case PuzzleKind.rotateRay:
-            controller.rotate(level, level.targetAngle);
-          case PuzzleKind.dragVertices:
-            controller.moveVertex(level, 'C', const GeoPoint(0, 3));
-          case PuzzleKind.numericAnswer:
-            controller.answer(level, '5');
-        }
+        enterSolution(controller, level);
         controller.submit(level);
       }
       await controller.persist();
@@ -191,10 +183,10 @@ void main() {
       final revision = controller.playRevision;
       store.failRead = false;
       store.value = jsonEncode(
-        ProgressSnapshot(lastLevelId: levels[1].id).toJson(),
+        ProgressSnapshot(lastLevelId: levels.first.id).toJson(),
       );
       await controller.load();
-      expect(controller.currentIndex, 1);
+      expect(controller.currentIndex, 0);
       expect(controller.playRevision, greaterThan(revision));
       expect(controller.completedCount, 0);
       expect(controller.puzzle(levels.first).isComplete, isFalse);

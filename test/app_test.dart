@@ -10,6 +10,7 @@ import 'package:geoswipe/core/app_controller.dart';
 import 'package:geoswipe/data/level_catalog.dart';
 import 'package:geoswipe/data/progress_repository.dart';
 import 'support/memory_store.dart';
+import 'support/course_solutions.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -138,6 +139,9 @@ void main() {
   testWidgets('swipe outside the handle changes levels instead of rotating', (
     tester,
   ) async {
+    enterSolution(controller, levels.first);
+    controller.submit(levels.first);
+    controller.restart(levels.first);
     await launch(tester);
     final rect = tester.getRect(
       find.byKey(const ValueKey('angle-board')).first,
@@ -157,15 +161,16 @@ void main() {
   testWidgets(
     'map opens the selected level and bottom navigation preserves state',
     (tester) async {
+      completeBefore(controller, 'angle-135');
       await launch(tester);
       await tab(tester, 'Карта обучения');
       await tester.tap(find.text('Шире прямого'));
       await tester.pumpAndSettle();
       expect(controller.currentIndex, 2);
-      expect(find.text('135°'), findsOneWidget);
+      expect(find.text('Тупой угол'), findsOneWidget);
       await tab(tester, 'Профиль');
       await tab(tester, 'Играть');
-      expect(find.text('135°'), findsOneWidget);
+      expect(find.text('Тупой угол'), findsOneWidget);
     },
   );
   testWidgets('wrong answer, hint and restart provide meaningful feedback', (

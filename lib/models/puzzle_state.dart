@@ -8,6 +8,7 @@ class PuzzleState {
     required this.scene,
     this.answer = '',
     this.hintUsed = false,
+    this.hintCount = 0,
     this.attempts = 0,
     this.result,
   });
@@ -24,6 +25,7 @@ class PuzzleState {
   }
 
   final bool hintUsed;
+  final int hintCount;
   final int attempts;
   final AttemptResult? result;
   bool get isComplete => result?.isCorrect ?? false;
@@ -32,18 +34,21 @@ class PuzzleState {
     scene: value,
     answer: answer,
     hintUsed: hintUsed,
+    hintCount: hintCount,
     attempts: attempts,
   );
   PuzzleState withAnswer(String value) => PuzzleState(
     scene: scene,
     answer: value,
     hintUsed: hintUsed,
+    hintCount: hintCount,
     attempts: attempts,
   );
   PuzzleState withHint() => PuzzleState(
     scene: scene,
     answer: answer,
     hintUsed: true,
+    hintCount: hintCount + 1,
     attempts: attempts,
     result: result,
   );
@@ -51,6 +56,7 @@ class PuzzleState {
     scene: scene,
     answer: answer,
     hintUsed: hintUsed,
+    hintCount: hintCount,
     attempts: attempts + 1,
     result: value,
   );

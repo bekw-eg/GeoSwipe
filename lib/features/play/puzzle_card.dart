@@ -49,9 +49,11 @@ class PuzzleCard extends StatelessWidget {
                   Tag(
                     review
                         ? 'ЗАКРЕПЛЯЕМ'
-                        : level.topicId == 'angles'
-                        ? 'УГЛЫ И ПОВОРОТЫ'
-                        : 'ТРЕУГОЛЬНИКИ',
+                        : switch (level.topicId) {
+                            'angles' => 'УГЛЫ',
+                            'pythagoras' => 'ПИФАГОР',
+                            _ => 'ТРИГОНОМЕТРИЯ',
+                          },
                     icon: Icons.auto_awesome_outlined,
                   ),
                   const Spacer(),
@@ -71,6 +73,21 @@ class PuzzleCard extends StatelessWidget {
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
               const SizedBox(height: 4),
+              Text(
+                level.stageLabel,
+                style: const TextStyle(color: AppColors.blue, fontSize: 12),
+              ),
+              if (level.knowledge.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    'Нужно знать: ${level.knowledge.join('; ')}',
+                    style: const TextStyle(
+                      color: AppColors.muted,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
               Text(
                 level.instruction,
                 style: const TextStyle(color: AppColors.muted, fontSize: 13),
@@ -93,29 +110,31 @@ class PuzzleCard extends StatelessWidget {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'ЦЕЛЬ',
-                                style: TextStyle(
-                                  color: AppColors.muted,
-                                  fontSize: 9,
-                                  letterSpacing: 2,
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'ЦЕЛЬ',
+                                  style: TextStyle(
+                                    color: AppColors.muted,
+                                    fontSize: 9,
+                                    letterSpacing: 2,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                level.goal,
-                                style: const TextStyle(
-                                  fontSize: 35,
-                                  fontWeight: FontWeight.w700,
-                                  height: 1.25,
-                                  letterSpacing: -1.5,
+                                Text(
+                                  level.goal,
+                                  style: const TextStyle(
+                                    fontSize: 27,
+                                    fontWeight: FontWeight.w700,
+                                    height: 1.25,
+                                    letterSpacing: -1.5,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                          const Spacer(),
+                          const SizedBox(width: 8),
                           Tag(
                             complete
                                 ? 'Получилось'
@@ -174,7 +193,7 @@ class PuzzleCard extends StatelessWidget {
                   icon: Icons.lightbulb_outline,
                   color: AppColors.warning,
                   title: 'Небольшая подсказка',
-                  text: level.hint,
+                  text: level.hints.take(state.hintCount).join('\n'),
                 ),
                 const SizedBox(height: 12),
               ],
@@ -228,11 +247,16 @@ class PuzzleCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   TextButton.icon(
-                    onPressed: complete || state.hintUsed
+                    onPressed: complete || state.hintCount >= level.hints.length
                         ? null
                         : () => controller.showHint(level, review: review),
                     icon: const Icon(Icons.lightbulb_outline, size: 16),
-                    label: const Text('Подсказка'),
+                    label: Text(
+                      state.hintCount > 0 &&
+                              state.hintCount < level.hints.length
+                          ? 'Ещё подсказка'
+                          : 'Подсказка',
+                    ),
                   ),
                   const SizedBox(width: 4),
                   IconButton(
