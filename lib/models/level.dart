@@ -3,6 +3,8 @@ import '../core/geometry/scene.dart';
 
 enum PuzzleKind { rotateRay, dragVertices, numericAnswer }
 
+enum LearningStage { explore, rule, practice, challenge }
+
 class Level {
   const Level({
     required this.id,
@@ -19,6 +21,11 @@ class Level {
     this.instruction = 'Поверни луч до заданного угла',
     this.goalLabel,
     this.answerLabel = 'Численный ответ',
+    this.stage = LearningStage.practice,
+    this.knowledge = const [],
+    this.prerequisiteIds = const [],
+    this.extraHints = const [],
+    this.accuracy,
   }) : assert(targetAngle >= 0 && targetAngle < 360),
        assert(initialAngle >= 0 && initialAngle < 360),
        assert(tolerance > 0 && tolerance < 180);
@@ -37,20 +44,36 @@ class Level {
   final String instruction;
   final String? goalLabel;
   final String answerLabel;
+  final LearningStage stage;
+  final List<String> knowledge;
+  final List<String> prerequisiteIds;
+  final List<String> extraHints;
+  final String? accuracy;
+  List<String> get hints => [hint, ...extraHints];
+  String get stageLabel => switch (stage) {
+    LearningStage.explore => 'Исследуй',
+    LearningStage.rule => 'Открой правило',
+    LearningStage.practice => 'Реши самостоятельно',
+    LearningStage.challenge => 'Испытание',
+  };
   GeometryScene get initialGeometry => initialScene ?? angleScene(initialAngle);
   GeometryConstraint get validation =>
       constraint ??
       AngleConstraint('A', 'O', 'B', target: targetAngle, tolerance: tolerance);
   String get goal => goalLabel ?? '${targetAngle.round()}°';
-  String get toleranceDescription => switch (validation) {
-    AngleConstraint(:final tolerance, :final directed) =>
-      directed
-          ? 'Допуск ±$tolerance° · Отсчёт против часовой стрелки'
-          : 'Допуск ±$tolerance° · Меньший угол между лучами',
-    RightTriangleConstraint(:final toleranceDegrees) =>
-      'Допуск прямого угла ±$toleranceDegrees° · Подходит любая вершина',
-    NumericAnswerConstraint(:final absoluteTolerance) =>
-      'Ответ числом · Допуск ±$absoluteTolerance · Можно использовать запятую',
-    _ => 'Выполни все условия задачи',
-  };
+  String get toleranceDescription =>
+      accuracy ??
+      switch (validation) {
+        AngleConstraint(:final tolerance, :final directed) =>
+          directed
+              ? 'Допуск ±$tolerance° · Отсчёт против часовой стрелки'
+              : 'Допуск ±$tolerance° · Меньший угол между лучами',
+        RightTriangleConstraint(:final toleranceDegrees) =>
+          'Допуск прямого угла ±$toleranceDegrees° · Подходит любая вершина',
+        NumericAnswerConstraint(:final absoluteTolerance) =>
+          absoluteTolerance == 0
+              ? 'Точное целое число · Можно использовать запятую'
+              : 'Ответ числом · Допуск ±${absoluteTolerance.toString().replaceAll('.', ',')} · Можно использовать запятую',
+        _ => 'Выполни все условия задачи',
+      };
 }

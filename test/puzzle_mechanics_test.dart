@@ -11,6 +11,7 @@ import 'package:geoswipe/data/level_catalog.dart';
 import 'package:geoswipe/data/progress_repository.dart';
 import 'package:geoswipe/widgets/geometry_viewport.dart';
 import 'support/memory_store.dart';
+import 'support/course_solutions.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -25,6 +26,7 @@ void main() {
     )..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'))).load();
   });
   late AppController controller;
+  int baseline = 0;
   final captureKey = GlobalKey();
   Future<void> launch(
     WidgetTester tester,
@@ -38,6 +40,8 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     controller = AppController(ProgressRepository(MemoryStore()));
     await controller.load();
+    completeBefore(controller, id);
+    baseline = controller.totalAttempts;
     controller.openLevel(levels.indexWhere((l) => l.id == id));
     await tester.pumpWidget(
       RepaintBoundary(
@@ -84,8 +88,8 @@ void main() {
   testWidgets('RotatePuzzle 60 degrees works through touch and retry', (
     tester,
   ) async {
-    await launch(tester, 'angle-60');
-    final level = levels.firstWhere((l) => l.id == 'angle-60');
+    await launch(tester, 'trig-standard-angle');
+    final level = levels.firstWhere((l) => l.id == 'trig-standard-angle');
     expect(find.text(level.explanation), findsNothing);
     await check(tester);
     expect(controller.puzzle(level).isComplete, isFalse);
@@ -110,7 +114,7 @@ void main() {
       reason:
           'angle=${controller.puzzle(level).angle}, index=${controller.currentIndex}',
     );
-    expect(controller.totalAttempts, 2);
+    expect(controller.totalAttempts - baseline, 2);
     expect(find.text(level.explanation), findsOneWidget);
     await capture(tester, 'engine-rotate');
     expect(tester.takeException(), isNull);
@@ -137,13 +141,13 @@ void main() {
       await tester.pumpAndSettle();
       await check(tester);
       expect(controller.puzzle(level).isComplete, isTrue);
-      expect(controller.completedCount, 1);
+      expect(controller.completedCount, baseline + 1);
       await tester.ensureVisible(find.byTooltip('Начать заново').first);
       await tester.tap(find.byTooltip('Начать заново').first);
       await tester.pumpAndSettle();
       expect(controller.puzzle(level).isComplete, isFalse);
       expect(controller.puzzle(level).scene.points['C']!.x, 2);
-      expect(controller.totalAttempts, 2);
+      expect(controller.totalAttempts - baseline, 2);
       expect(tester.takeException(), isNull);
     },
   );
@@ -171,17 +175,17 @@ void main() {
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pumpAndSettle();
       expect(controller.puzzle(level).isComplete, isTrue);
-      expect(controller.totalAttempts, 3);
+      expect(controller.totalAttempts - baseline, 3);
       expect(find.text(level.explanation), findsOneWidget);
-      await check(tester); // Last level returns to learning map.
-      expect(controller.tab, 1);
+      await check(tester);
+      expect(controller.currentIndex, levels.indexOf(level) + 1);
       controller.openLevel(levels.indexOf(level));
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.byTooltip('Начать заново').first);
       await tester.tap(find.byTooltip('Начать заново').first);
       await tester.pumpAndSettle();
       expect(tester.widget<TextField>(input).controller!.text, isEmpty);
-      expect(controller.totalAttempts, 3);
+      expect(controller.totalAttempts - baseline, 3);
       expect(tester.takeException(), isNull);
     },
   );
@@ -197,7 +201,7 @@ void main() {
         for (final id in ['triangle-right', 'pythagoras-3-4']) {
           await launch(tester, id, size: size);
           await check(tester);
-          expect(controller.totalAttempts, 1);
+          expect(controller.totalAttempts - baseline, 1);
           await tester.ensureVisible(find.byTooltip('Начать заново').first);
           await tester.tap(find.byTooltip('Начать заново').first);
           await tester.pumpAndSettle();

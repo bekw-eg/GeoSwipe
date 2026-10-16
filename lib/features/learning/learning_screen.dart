@@ -83,6 +83,7 @@ class LearningScreen extends StatelessWidget {
               child: _LevelTile(
                 index: i,
                 progress: controller.progress.forLevel(levels[i].id),
+                unlocked: controller.isUnlocked(i),
                 onTap: () => controller.openLevel(i),
               ),
             ),
@@ -97,10 +98,12 @@ class _LevelTile extends StatelessWidget {
     required this.index,
     required this.progress,
     required this.onTap,
+    required this.unlocked,
   });
   final int index;
   final LevelProgress progress;
   final VoidCallback onTap;
+  final bool unlocked;
   @override
   Widget build(BuildContext context) {
     final color = progress.isMastered
@@ -108,7 +111,9 @@ class _LevelTile extends StatelessWidget {
         : progress.isAssistedOnly
         ? AppColors.warning
         : AppColors.violet;
-    final status = progress.isMastered
+    final status = !unlocked
+        ? 'Сначала: ${levels.firstWhere((l) => l.id == levels[index].prerequisiteIds.first).title}'
+        : progress.isMastered
         ? 'Освоено'
         : progress.isAssistedOnly
         ? 'С подсказкой'
@@ -119,7 +124,7 @@ class _LevelTile extends StatelessWidget {
       color: AppColors.surface,
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
-        onTap: onTap,
+        onTap: unlocked ? onTap : null,
         borderRadius: BorderRadius.circular(18),
         child: Padding(
           padding: const EdgeInsets.all(14),
@@ -133,7 +138,9 @@ class _LevelTile extends StatelessWidget {
                   borderRadius: BorderRadius.circular(13),
                 ),
                 alignment: Alignment.center,
-                child: progress.isCompleted
+                child: !unlocked
+                    ? const Icon(Icons.lock_outline, color: AppColors.muted)
+                    : progress.isCompleted
                     ? Icon(
                         progress.isMastered
                             ? Icons.verified_outlined

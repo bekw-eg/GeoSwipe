@@ -182,9 +182,27 @@ class GeometryPainter extends CustomPainter {
               : null);
       if (label != null) {
         final direction = b - a;
-        final normal = direction.distance < 1
+        var normal = direction.distance < 1
             ? const Offset(0, -1)
-            : Offset(direction.dy, -direction.dx) / direction.distance;
+            : Offset(-direction.dy, direction.dx) / direction.distance;
+        // Place length labels outside their triangle, including reflected scenes.
+        for (final triangle in scene.triangles) {
+          final ids = [triangle.a, triangle.b, triangle.c];
+          if (!ids.contains(segment.start) || !ids.contains(segment.end)) {
+            continue;
+          }
+          final others = ids.where(
+            (id) => id != segment.start && id != segment.end,
+          );
+          if (others.isEmpty) continue;
+          final third = point(others.first);
+          final towardInterior = third - (a + b) / 2;
+          if (normal.dx * towardInterior.dx + normal.dy * towardInterior.dy >
+              0) {
+            normal = -normal;
+          }
+          break;
+        }
         _text(canvas, size, label, (a + b) / 2 + normal * 15, AppColors.blue);
       }
     }
@@ -231,16 +249,25 @@ class GeometryPainter extends CustomPainter {
           ..color = color
           ..strokeWidth = 1.5,
       );
-      if (arc.showDegrees) {
+      if (arc.showDegrees || arc.label != null) {
         final middle = start + sweep / 2;
         _text(
           canvas,
           size,
-          '${degrees.toStringAsFixed(1)}°',
+          arc.label ?? '${degrees.toStringAsFixed(1)}°',
           center + Offset(math.cos(middle), math.sin(middle)) * (radius + 12),
           color,
         );
       }
+    }
+    for (final annotation in scene.annotations) {
+      _text(
+        canvas,
+        size,
+        annotation.text,
+        viewport.toScreen(annotation.position),
+        AppColors.blue,
+      );
     }
     final handles = {
       ...scene.draggable,
@@ -257,7 +284,20 @@ class GeometryPainter extends CustomPainter {
         movable ? 8 : 4,
         Paint()..color = movable ? color : AppColors.text,
       );
-      _text(canvas, size, entry.key, p + const Offset(16, 16), AppColors.text);
+      // Keep vertex names away from short adjacent sides and their labels.
+      var labelDy = p.dy >= size.height / 2 ? 16.0 : -16.0;
+      var nearestDistance = double.infinity;
+      for (final other in scene.points.entries) {
+        if (other.key == entry.key) continue;
+        final neighbor = point(other.key);
+        final distance = (p - neighbor).distance;
+        if (distance > 1 && distance < nearestDistance) {
+          nearestDistance = distance;
+          labelDy = p.dy >= neighbor.dy ? 16 : -16;
+        }
+      }
+      final labelOffset = Offset(p.dx >= size.width / 2 ? 16 : -16, labelDy);
+      _text(canvas, size, entry.key, p + labelOffset, AppColors.text);
     }
     canvas.restore();
   }
