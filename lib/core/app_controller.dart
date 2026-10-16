@@ -5,7 +5,8 @@ import '../models/attempt_result.dart';
 import '../models/level.dart';
 import '../models/progress.dart';
 import '../models/puzzle_state.dart';
-import 'geometry/angle_math.dart';
+import 'geometry/geometry.dart';
+import 'geometry/scene.dart';
 
 class AppController extends ChangeNotifier {
   AppController(this.repository);
@@ -79,14 +80,62 @@ class AppController extends ChangeNotifier {
   String _key(Level level, bool review) =>
       '${review ? 'review' : 'play'}:${level.id}';
   PuzzleState puzzle(Level level, {bool review = false}) =>
-      _puzzles[_key(level, review)] ?? PuzzleState(angle: level.initialAngle);
+      _puzzles[_key(level, review)] ?? PuzzleState.initial(level);
 
   void rotate(Level level, double angle, {bool review = false}) {
-    if (!angle.isFinite || puzzle(level, review: review).isComplete) return;
+    if (!angle.isFinite ||
+        level.kind != PuzzleKind.rotateRay ||
+        puzzle(level, review: review).isComplete) {
+      return;
+    }
+    final scene = puzzle(level, review: review).scene;
+    updateGeometry(
+      level,
+      scene.rotateRay(scene.rays.firstWhere((r) => r.rotatable), angle),
+      review: review,
+    );
+  }
+
+  void updateGeometry(Level level, GeometryScene scene, {bool review = false}) {
+    if (puzzle(level, review: review).isComplete ||
+        level.kind == PuzzleKind.numericAnswer) {
+      return;
+    }
     _puzzles[_key(level, review)] = puzzle(
       level,
       review: review,
-    ).withAngle(normalizeDegrees(angle));
+    ).withScene(scene);
+    _emit();
+  }
+
+  void moveVertex(
+    Level level,
+    String id,
+    GeoPoint point, {
+    bool review = false,
+  }) {
+    final state = puzzle(level, review: review);
+    if (state.isComplete ||
+        !point.isFinite ||
+        !state.scene.draggable.contains(id)) {
+      return;
+    }
+    updateGeometry(
+      level,
+      state.scene.withPoint(id, state.scene.bounds.clamp(point)),
+      review: review,
+    );
+  }
+
+  void answer(Level level, String value, {bool review = false}) {
+    if (level.kind != PuzzleKind.numericAnswer ||
+        puzzle(level, review: review).isComplete) {
+      return;
+    }
+    _puzzles[_key(level, review)] = puzzle(
+      level,
+      review: review,
+    ).withAnswer(value);
     _emit();
   }
 
@@ -97,19 +146,21 @@ class AppController extends ChangeNotifier {
   }
 
   void restart(Level level, {bool review = false}) {
-    _puzzles[_key(level, review)] = PuzzleState(angle: level.initialAngle);
+    _puzzles[_key(level, review)] = PuzzleState.initial(level);
     _emit();
   }
 
   AttemptResult submit(Level level, {bool review = false}) {
     final state = puzzle(level, review: review);
     if (state.isComplete) return state.result!;
+    final check = level.validation.check(state.scene, answer: state.answer);
     final result = AttemptResult(
-      outcome: isAngleCorrect(state.angle, level.targetAngle, level.tolerance)
+      outcome: check.isCorrect
           ? AttemptOutcome.correct
           : AttemptOutcome.incorrect,
       angle: state.angle,
-      error: angularDistance(state.angle, level.targetAngle),
+      error: check.error,
+      feedback: check.message,
       hintUsed: state.hintUsed,
     );
     _puzzles[_key(level, review)] = state.withResult(result);
@@ -142,9 +193,7 @@ class AppController extends ChangeNotifier {
     reviewLevel = levelId == null
         ? available.first
         : available.firstWhere((l) => l.id == levelId);
-    _puzzles[_key(reviewLevel!, true)] = PuzzleState(
-      angle: reviewLevel!.initialAngle,
-    );
+    _puzzles[_key(reviewLevel!, true)] = PuzzleState.initial(reviewLevel!);
     reviewRevision++;
     tab = 2;
     _emit();

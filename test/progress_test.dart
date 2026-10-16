@@ -4,6 +4,8 @@ import 'package:geoswipe/core/app_controller.dart';
 import 'package:geoswipe/data/level_catalog.dart';
 import 'package:geoswipe/data/progress_repository.dart';
 import 'package:geoswipe/models/progress.dart';
+import 'package:geoswipe/models/level.dart';
+import 'package:geoswipe/core/geometry/geometry.dart';
 import 'support/memory_store.dart';
 
 void main() {
@@ -45,7 +47,7 @@ void main() {
     controller.rotate(level, 90);
     controller.showHint(level);
     expect(controller.totalAttempts, 1);
-    expect(controller.puzzle(level).angle, 45);
+    expect(controller.puzzle(level).angle, closeTo(45, 1e-9));
     expect(controller.puzzle(level).hintUsed, isFalse);
   });
   test('assisted completion does not count as mastery', () {
@@ -117,7 +119,14 @@ void main() {
     'writes remain ordered when actions happen in quick succession',
     () async {
       for (final level in levels) {
-        controller.rotate(level, level.targetAngle);
+        switch (level.kind) {
+          case PuzzleKind.rotateRay:
+            controller.rotate(level, level.targetAngle);
+          case PuzzleKind.dragVertices:
+            controller.moveVertex(level, 'C', const GeoPoint(0, 3));
+          case PuzzleKind.numericAnswer:
+            controller.answer(level, '5');
+        }
         controller.submit(level);
       }
       await controller.persist();
@@ -243,8 +252,8 @@ void main() {
       }
       for (final level in levels) {
         expect(
-          (level.targetAngle - level.initialAngle).abs(),
-          greaterThan(level.tolerance),
+          level.validation.check(level.initialGeometry).isCorrect,
+          isFalse,
         );
       }
     },
