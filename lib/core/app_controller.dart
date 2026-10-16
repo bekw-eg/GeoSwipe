@@ -36,13 +36,30 @@ class AppController extends ChangeNotifier {
   int get assistedCount =>
       levels.where((l) => progress.forLevel(l.id).isAssistedOnly).length;
 
+  bool isUnlocked(int index) {
+    if (index < 0 || index >= levels.length) return false;
+    final level = levels[index];
+    // A compatible completion from an older catalog always remains accessible.
+    return progress.forLevel(level.id).isCompleted ||
+        level.prerequisiteIds.every((id) => progress.forLevel(id).isCompleted);
+  }
+
+  List<int> get unlockedIndices => [
+    for (var i = 0; i < levels.length; i++)
+      if (isUnlocked(i)) i,
+  ];
+
+  bool _canPlay(Level level, bool review) => review
+      ? progress.forLevel(level.id).isCompleted
+      : isUnlocked(levels.indexOf(level));
+
   Future<void> load() async {
     isLoading = true;
     _emit();
     try {
       progress = await repository.load();
       final index = levels.indexWhere((l) => l.id == progress.lastLevelId);
-      currentIndex = index < 0 ? 0 : index;
+      currentIndex = isUnlocked(index) ? index : 0;
       // A successful retry restores a coherent session from the saved snapshot.
       _puzzles.clear();
       reviewLevel = null;
@@ -62,6 +79,7 @@ class AppController extends ChangeNotifier {
   }
 
   void openLevel(int index) {
+    if (!isUnlocked(index)) return;
     currentIndex = index;
     tab = 0;
     playRevision++;
@@ -71,6 +89,7 @@ class AppController extends ChangeNotifier {
   }
 
   void changePage(int index) {
+    if (!isUnlocked(index)) return;
     currentIndex = index;
     progress = progress.withLastLevel(levels[index].id);
     persist();
@@ -83,7 +102,8 @@ class AppController extends ChangeNotifier {
       _puzzles[_key(level, review)] ?? PuzzleState.initial(level);
 
   void rotate(Level level, double angle, {bool review = false}) {
-    if (!angle.isFinite ||
+    if (!_canPlay(level, review) ||
+        !angle.isFinite ||
         level.kind != PuzzleKind.rotateRay ||
         puzzle(level, review: review).isComplete) {
       return;
@@ -97,7 +117,8 @@ class AppController extends ChangeNotifier {
   }
 
   void updateGeometry(Level level, GeometryScene scene, {bool review = false}) {
-    if (puzzle(level, review: review).isComplete ||
+    if (!_canPlay(level, review) ||
+        puzzle(level, review: review).isComplete ||
         level.kind == PuzzleKind.numericAnswer) {
       return;
     }
@@ -128,7 +149,8 @@ class AppController extends ChangeNotifier {
   }
 
   void answer(Level level, String value, {bool review = false}) {
-    if (level.kind != PuzzleKind.numericAnswer ||
+    if (!_canPlay(level, review) ||
+        level.kind != PuzzleKind.numericAnswer ||
         puzzle(level, review: review).isComplete) {
       return;
     }
@@ -140,17 +162,31 @@ class AppController extends ChangeNotifier {
   }
 
   void showHint(Level level, {bool review = false}) {
-    if (puzzle(level, review: review).isComplete) return;
+    if (!_canPlay(level, review) ||
+        puzzle(level, review: review).isComplete ||
+        puzzle(level, review: review).hintCount >= level.hints.length) {
+      return;
+    }
     _puzzles[_key(level, review)] = puzzle(level, review: review).withHint();
     _emit();
   }
 
   void restart(Level level, {bool review = false}) {
+    if (!_canPlay(level, review)) return;
     _puzzles[_key(level, review)] = PuzzleState.initial(level);
     _emit();
   }
 
   AttemptResult submit(Level level, {bool review = false}) {
+    if (!_canPlay(level, review)) {
+      return const AttemptResult(
+        outcome: AttemptOutcome.incorrect,
+        angle: 0,
+        error: 0,
+        feedback: 'Сначала реши предыдущий уровень.',
+        hintUsed: false,
+      );
+    }
     final state = puzzle(level, review: review);
     if (state.isComplete) return state.result!;
     final check = level.validation.check(state.scene, answer: state.answer);

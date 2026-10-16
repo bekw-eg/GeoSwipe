@@ -47,12 +47,20 @@ class AngleArc {
     this.second, {
     this.directed = false,
     this.showDegrees = true,
+    this.label,
   });
   final String first;
   final String vertex;
   final String second;
   final bool directed;
   final bool showDegrees;
+  final String? label;
+}
+
+class GeoAnnotation {
+  const GeoAnnotation(this.position, this.text);
+  final GeoPoint position;
+  final String text;
 }
 
 /// Immutable scene. References share points, so connected objects move together.
@@ -65,11 +73,13 @@ class GeometryScene {
     List<TriangleRef> triangles = const [],
     List<AngleArc> arcs = const [],
     Set<String> draggable = const {},
+    List<GeoAnnotation> annotations = const [],
   }) : points = Map.unmodifiable(points),
        segments = List.unmodifiable(segments),
        rays = List.unmodifiable(rays),
        triangles = List.unmodifiable(triangles),
        arcs = List.unmodifiable(arcs),
+       annotations = List.unmodifiable(annotations),
        draggable = Set.unmodifiable(draggable) {
     final references = <String>[
       ...draggable,
@@ -80,6 +90,7 @@ class GeometryScene {
     ];
     if (!bounds.isValid ||
         points.values.any((p) => !p.isFinite) ||
+        annotations.any((a) => !a.position.isFinite) ||
         references.any((id) => !points.containsKey(id))) {
       throw ArgumentError(
         'Scene needs finite points, valid bounds and references',
@@ -99,6 +110,7 @@ class GeometryScene {
   final List<TriangleRef> triangles;
   final List<AngleArc> arcs;
   final Set<String> draggable;
+  final List<GeoAnnotation> annotations;
 
   GeometryScene withPoint(String id, GeoPoint point) {
     if (!points.containsKey(id) || !point.isFinite) {
@@ -112,6 +124,7 @@ class GeometryScene {
       triangles: triangles,
       arcs: arcs,
       draggable: draggable,
+      annotations: annotations,
     );
   }
 
