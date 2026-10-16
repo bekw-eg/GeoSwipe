@@ -66,69 +66,28 @@ class LearningScreen extends StatelessWidget {
         ],
       ),
       const SizedBox(height: 16),
-      Text(topics.first.title, style: Theme.of(context).textTheme.titleLarge),
-      const SizedBox(height: 4),
-      Text(
-        topics.first.description,
-        style: const TextStyle(color: AppColors.muted, fontSize: 12),
-      ),
-      const SizedBox(height: 17),
-      for (var i = 0; i < levels.length; i++)
-        Padding(
-          padding: const EdgeInsets.only(bottom: 9),
-          child: _LevelTile(
-            index: i,
-            progress: controller.progress.forLevel(levels[i].id),
-            onTap: () => controller.openLevel(i),
-          ),
+      for (final topic in topics) ...[
+        Text(topic.title, style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 4),
+        Text(
+          topic.description,
+          style: const TextStyle(color: AppColors.muted, fontSize: 12),
         ),
-      const SizedBox(height: 22),
-      for (var i = 1; i < topics.length; i++)
-        Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: SurfaceCard(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  i == 1 ? Icons.change_history : Icons.waves,
-                  color: AppColors.muted,
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'ГЛАВА 0${i + 1}',
-                        style: const TextStyle(
-                          color: AppColors.muted,
-                          fontSize: 9,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        topics[i].title,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        topics[i].description,
-                        style: const TextStyle(
-                          color: AppColors.muted,
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      const Tag('Уровней пока нет', color: AppColors.muted),
-                    ],
-                  ),
-                ),
-              ],
+        const SizedBox(height: 17),
+        if (!topic.isAvailable)
+          const Tag('Уровней пока нет', color: AppColors.muted),
+        for (var i = 0; i < levels.length; i++)
+          if (levels[i].topicId == topic.id)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 9),
+              child: _LevelTile(
+                index: i,
+                progress: controller.progress.forLevel(levels[i].id),
+                onTap: () => controller.openLevel(i),
+              ),
             ),
-          ),
-        ),
+        const SizedBox(height: 22),
+      ],
     ],
   );
 }

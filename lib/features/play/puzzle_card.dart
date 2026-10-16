@@ -1,9 +1,8 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../core/app_controller.dart';
 import '../../core/theme.dart';
 import '../../models/level.dart';
-import '../../widgets/angle_board.dart';
+import 'puzzle_mechanics.dart';
 import '../../widgets/common.dart';
 
 class PuzzleCard extends StatelessWidget {
@@ -35,6 +34,7 @@ class PuzzleCard extends StatelessWidget {
         return SingleChildScrollView(
           physics:
               constraints.maxHeight < 590 ||
+                  level.kind != PuzzleKind.rotateRay ||
                   largeText ||
                   state.hintUsed ||
                   state.result != null
@@ -47,7 +47,11 @@ class PuzzleCard extends StatelessWidget {
               Row(
                 children: [
                   Tag(
-                    review ? 'ЗАКРЕПЛЯЕМ' : 'УГЛЫ И ПОВОРОТЫ',
+                    review
+                        ? 'ЗАКРЕПЛЯЕМ'
+                        : level.topicId == 'angles'
+                        ? 'УГЛЫ И ПОВОРОТЫ'
+                        : 'ТРЕУГОЛЬНИКИ',
                     icon: Icons.auto_awesome_outlined,
                   ),
                   const Spacer(),
@@ -67,9 +71,9 @@ class PuzzleCard extends StatelessWidget {
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
               const SizedBox(height: 4),
-              const Text(
-                'Поверни луч до заданного угла',
-                style: TextStyle(color: AppColors.muted, fontSize: 13),
+              Text(
+                level.instruction,
+                style: const TextStyle(color: AppColors.muted, fontSize: 13),
               ),
               const SizedBox(height: 18),
               Container(
@@ -101,7 +105,7 @@ class PuzzleCard extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                '${level.targetAngle.round()}°',
+                                level.goal,
                                 style: const TextStyle(
                                   fontSize: 35,
                                   fontWeight: FontWeight.w700,
@@ -113,7 +117,14 @@ class PuzzleCard extends StatelessWidget {
                           ),
                           const Spacer(),
                           Tag(
-                            complete ? 'Получилось' : 'Двигай точку B',
+                            complete
+                                ? 'Получилось'
+                                : switch (level.kind) {
+                                    PuzzleKind.rotateRay => 'Двигай точку B',
+                                    PuzzleKind.dragVertices =>
+                                      'Двигай ${state.scene.draggable.join(', ')}',
+                                    PuzzleKind.numericAnswer => 'Вычисли ответ',
+                                  },
                             icon: complete
                                 ? Icons.check
                                 : Icons.touch_app_outlined,
@@ -122,59 +133,38 @@ class PuzzleCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    SizedBox(
-                      height: boardHeight,
-                      child: AngleBoard(
-                        angle: state.angle,
-                        complete: complete,
-                        onChanged: (value) =>
+                    switch (level.kind) {
+                      PuzzleKind.rotateRay => RotatePuzzle(
+                        state: state,
+                        height: boardHeight,
+                        onChanged: (scene) => controller.updateGeometry(
+                          level,
+                          scene,
+                          review: review,
+                        ),
+                        onRotate: (value) =>
                             controller.rotate(level, value, review: review),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 18),
-                      child: Row(
-                        children: [
-                          const Text(
-                            'ТВОЙ УГОЛ',
-                            style: TextStyle(
-                              color: AppColors.muted,
-                              fontSize: 9,
-                              letterSpacing: 1.5,
-                            ),
-                          ),
-                          const Spacer(),
-                          Text(
-                            '${state.angle.toStringAsFixed(1)}°',
-                            key: const ValueKey('current-angle'),
-                            style: const TextStyle(
-                              color: AppColors.violet,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
+                      PuzzleKind.dragVertices => DragPuzzle(
+                        state: state,
+                        height: boardHeight,
+                        onChanged: (scene) => controller.updateGeometry(
+                          level,
+                          scene,
+                          review: review,
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: Slider(
-                        key: const ValueKey('angle-slider'),
-                        value: math.min(state.angle, 359.9),
-                        min: 0,
-                        max: 359.9,
-                        divisions: 3599,
-                        semanticFormatterCallback: (value) =>
-                            '${value.toStringAsFixed(1)} градуса',
-                        onChanged: complete
-                            ? null
-                            : (value) => controller.rotate(
-                                level,
-                                value,
-                                review: review,
-                              ),
+                      PuzzleKind.numericAnswer => AnswerPuzzle(
+                        answerLabel: level.answerLabel,
+                        key: ValueKey('${level.id}:$review'),
+                        state: state,
+                        height: boardHeight,
+                        onChanged: (value) =>
+                            controller.answer(level, value, review: review),
+                        onSubmit: () =>
+                            controller.submit(level, review: review),
                       ),
-                    ),
+                    },
                   ],
                 ),
               ),
@@ -201,11 +191,9 @@ class PuzzleCard extends StatelessWidget {
                               ? 'Решено с подсказкой'
                               : progress.isMastered
                               ? 'Навык закреплён!'
-                              : 'Отличный поворот!')
+                              : 'Отличная работа!')
                         : 'Ещё немного',
-                    text: complete
-                        ? level.explanation
-                        : 'Отклонение ${state.result!.error.toStringAsFixed(1)}°. Подстрой луч и проверь ещё раз.',
+                    text: complete ? level.explanation : state.result!.feedback,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -216,7 +204,10 @@ class PuzzleCard extends StatelessWidget {
                   key: const ValueKey('check-answer'),
                   onPressed: complete
                       ? onNext
-                      : () => controller.submit(level, review: review),
+                      : () {
+                          FocusScope.of(context).unfocus();
+                          controller.submit(level, review: review);
+                        },
                   icon: Icon(
                     complete ? Icons.arrow_upward_rounded : Icons.check_rounded,
                     size: 19,
@@ -253,7 +244,7 @@ class PuzzleCard extends StatelessWidget {
               ),
               Center(
                 child: Text(
-                  'Допуск ±${level.tolerance.round()}° · Отсчёт против часовой стрелки',
+                  level.toleranceDescription,
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 10, color: AppColors.muted),
                 ),

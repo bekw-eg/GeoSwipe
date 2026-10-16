@@ -149,7 +149,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(controller.currentIndex, 1);
     expect(find.text('Прямой поворот'), findsOneWidget);
-    expect(controller.puzzle(levels.first).angle, levels.first.initialAngle);
+    expect(
+      controller.puzzle(levels.first).angle,
+      closeTo(levels.first.initialAngle, 1e-9),
+    );
   });
   testWidgets(
     'map opens the selected level and bottom navigation preserves state',

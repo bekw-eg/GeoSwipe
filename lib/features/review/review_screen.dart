@@ -43,7 +43,7 @@ class ReviewScreen extends StatelessWidget {
         const ScreenHeading(
           eyebrow: 'От знания к навыку',
           title: 'Повторение',
-          subtitle: 'Один знакомый угол. Новая уверенность.',
+          subtitle: 'Знакомая задача. Новая уверенность.',
         ),
         if (completed.isEmpty)
           EmptyState(
