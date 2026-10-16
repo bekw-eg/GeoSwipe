@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'core/app_controller.dart';
@@ -16,20 +17,51 @@ class GeoSwipeApp extends StatefulWidget {
   State<GeoSwipeApp> createState() => _GeoSwipeAppState();
 }
 
-class _GeoSwipeAppState extends State<GeoSwipeApp> {
+class _GeoSwipeAppState extends State<GeoSwipeApp> with WidgetsBindingObserver {
   late final AppController _controller =
       widget.controller ??
       AppController(ProgressRepository(PreferencesProgressStore()));
+  Timer? _dueTimer;
+
+  void _scheduleRefresh() {
+    _dueTimer?.cancel();
+    final now = _controller.now;
+    final upcoming =
+        _controller.progress.skills.values
+            .map((skill) => skill.dueAt)
+            .whereType<DateTime>()
+            .where((due) => due.isAfter(now))
+            .toList()
+          ..sort();
+    if (upcoming.isNotEmpty) {
+      _dueTimer = Timer(
+        upcoming.first.difference(now),
+        _controller.refreshTime,
+      );
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _controller.addListener(_scheduleRefresh);
+    _scheduleRefresh();
     if (_controller.isLoading) _controller.load();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _controller.removeListener(_scheduleRefresh);
+    _dueTimer?.cancel();
     if (widget.controller == null) _controller.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _controller.refreshTime();
   }
 
   @override

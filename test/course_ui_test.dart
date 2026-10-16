@@ -11,6 +11,7 @@ import 'package:geoswipe/data/progress_repository.dart';
 import 'package:geoswipe/models/level.dart';
 import 'package:geoswipe/models/progress.dart';
 import 'support/course_solutions.dart';
+import 'package:geoswipe/core/learning_explanation.dart';
 import 'support/memory_store.dart';
 
 void main() {
@@ -104,7 +105,10 @@ void main() {
         }
         await pressCheck(tester);
         expect(controller.puzzle(level).isComplete, isTrue, reason: level.id);
-        expect(find.text(level.explanation), findsOneWidget);
+        expect(
+          find.text(learningExplanation(level, controller.puzzle(level))),
+          findsOneWidget,
+        );
         expect(controller.completedCount, i + 1);
         await pressCheck(tester);
         expect(tester.takeException(), isNull, reason: level.id);
@@ -178,6 +182,10 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text(level.hints.first), findsOneWidget);
       expect(find.text(level.explanation), findsNothing);
+      await tester.ensureVisible(find.text('Ещё подсказка').first);
+      await tester.tap(find.text('Ещё подсказка').first);
+      await tester.pumpAndSettle();
+      expect(find.text(level.hints.take(2).join('\n')), findsOneWidget);
       await tester.ensureVisible(find.text('Ещё подсказка').first);
       await tester.tap(find.text('Ещё подсказка').first);
       await tester.pumpAndSettle();

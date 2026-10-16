@@ -26,6 +26,8 @@ class Level {
     this.prerequisiteIds = const [],
     this.extraHints = const [],
     this.accuracy,
+    this.guidedHints,
+    this.variant = 0,
   }) : assert(targetAngle >= 0 && targetAngle < 360),
        assert(initialAngle >= 0 && initialAngle < 360),
        assert(tolerance > 0 && tolerance < 180);
@@ -49,7 +51,10 @@ class Level {
   final List<String> prerequisiteIds;
   final List<String> extraHints;
   final String? accuracy;
-  List<String> get hints => [hint, ...extraHints];
+  final List<String>? guidedHints;
+  final int variant;
+  String get skillId => id;
+  List<String> get hints => guidedHints ?? [hint, ...extraHints];
   String get stageLabel => switch (stage) {
     LearningStage.explore => 'Исследуй',
     LearningStage.rule => 'Открой правило',

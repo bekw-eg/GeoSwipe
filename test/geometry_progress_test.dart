@@ -1,3 +1,5 @@
+import 'support/review_solutions.dart';
+import 'package:geoswipe/models/learning_progress.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geoswipe/core/app_controller.dart';
 import 'package:geoswipe/core/geometry/geometry.dart';
@@ -32,21 +34,29 @@ void main() {
       expect(controller.assistedCount, 1);
       expect(controller.masteredCount, 0);
       controller.startReview(levelId: answer.id);
-      expect(controller.puzzle(answer, review: true).answer, isEmpty);
-      controller.answer(answer, '5.00', review: true);
-      expect(controller.submit(answer, review: true).isCorrect, isTrue);
-      expect(controller.masteredCount, 1);
+      expect(
+        controller.puzzle(controller.reviewLevel!, review: true).answer,
+        isEmpty,
+      );
+      solveReview(controller);
+      expect(
+        controller.submit(controller.reviewLevel!, review: true).isCorrect,
+        isTrue,
+      );
+      expect(controller.masteredCount, 0);
       controller.startReview(levelId: drag.id);
-      expect(controller.puzzle(drag, review: true).scene.points['C']!.x, 2);
-      controller.moveVertex(drag, 'C', const GeoPoint(3, -3), review: true);
-      expect(controller.submit(drag, review: true).isCorrect, isTrue);
-      expect(controller.progress.forLevel(drag.id).isMastered, isFalse);
+      solveReview(controller);
+      expect(
+        controller.submit(controller.reviewLevel!, review: true).isCorrect,
+        isTrue,
+      );
+      expect(controller.skill(drag).state, SkillState.independent);
       controller.openLevel(levels.indexOf(answer));
       await controller.persist();
       final restored = AppController(ProgressRepository(store));
       await restored.load();
       expect(restored.completedCount, levels.indexOf(answer) + 1);
-      expect(restored.masteredCount, 1);
+      expect(restored.masteredCount, 0);
       expect(restored.totalAttempts, baseline + 3);
       expect(restored.currentIndex, levels.indexOf(answer));
       expect(restored.puzzle(answer).answer, isEmpty);
