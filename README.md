@@ -49,12 +49,18 @@ Android-приложение полностью работает без инте
 lib/
   core/       ChangeNotifier-контроллер, тема, чистая математика
   models/     Level, MathTopic, PuzzleState, AttemptResult, прогресс
-  data/       каталог уровней, репозиторий и адаптер локального хранилища
+  data/       каталог уровней, репозиторий и адаптеры хранилища (локальный и PostgreSQL)
   features/   play, learning, review, profile
   widgets/    интерактивный CustomPainter и общие компоненты
+server/
+  prisma/     Prisma ORM схема, миграции PostgreSQL и seed скрипт
+  src/        REST API (Express/TypeScript), JWT auth, CRUD и транзакции
+  tests/      интеграционные тесты базы данных и API
 ```
 
-`core/geometry/` не зависит от Flutter: формулы, неизменяемые сцены и математические ограничения. `GeometryViewport` переводит координаты между сценой и экраном с одинаковым масштабом по осям; `GeometryBoard` обрабатывает ручки, `GeometryPainter` рисует. `RotatePuzzle`, `DragPuzzle`, `AnswerPuzzle` используют общую карточку с условием, проверкой, подсказкой и перезапуском. См. [описание API и пример новой задачи](docs/geometry-engine.md). Контроллер управляет состоянием и передаёт снимки репозиторию; `ProgressStore` подменяется в тестах. Новые уровни и главы добавляются в `level_catalog.dart` со стабильными уникальными идентификаторами.
+Подробная документация по работе с базой данных: [PostgreSQL Backend](docs/postgresql-backend.md).
+
+`core/geometry/` не зависит от Flutter: формулы, неизменяемые сцены и математические ограничения. `GeometryViewport` переводит координаты между сценой и экраном с одинаковым масштабом по осям; `GeometryBoard` обрабатывает ручки, `GeometryPainter` рисует. `RotatePuzzle`, `DragPuzzle`, `AnswerPuzzle` используют общую карточку с условием, проверкой, подсказкой и перезапуском. См. [описание API и пример новой задачи](docs/geometry-engine.md). Контроллер управляет состоянием и передаёт снимки репозиторию; `ProgressStore` подменяется в тестах (поддерживаются как локальный `PreferencesProgressStore`, так и облачный `PostgresApiProgressStore`). Новые уровни и главы добавляются в `level_catalog.dart` со стабильными уникальными идентификаторами.
 
 ## Локальные данные
 
