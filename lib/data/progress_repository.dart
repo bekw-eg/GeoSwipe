@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/progress.dart';
 
+export 'postgres_progress_store.dart';
+import 'postgres_progress_store.dart';
+
 abstract interface class ProgressStore {
   Future<String?> read();
   Future<void> write(String value);
@@ -19,6 +22,19 @@ class PreferencesProgressStore implements ProgressStore {
 
 class ProgressRepository {
   ProgressRepository(this.store);
+
+  factory ProgressRepository.withPostgres({
+    required String baseUrl,
+    String? token,
+    ProgressStore? localFallback,
+  }) => ProgressRepository(
+    PostgresApiProgressStore(
+      baseUrl: baseUrl,
+      token: token,
+      localFallback: localFallback,
+    ),
+  );
+
   final ProgressStore store;
   Future<ProgressSnapshot> load() async {
     final source = await store.read();
