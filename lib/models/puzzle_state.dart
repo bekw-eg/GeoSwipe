@@ -1,4 +1,5 @@
 import '../core/geometry/angle_math.dart';
+import '../core/geometry/geometry.dart';
 import '../core/geometry/scene.dart';
 import 'attempt_result.dart';
 import 'level.dart';
@@ -21,6 +22,17 @@ class PuzzleState {
     if (rays.isEmpty) return 0;
     final ray = rays.first;
     final vector = scene.points[ray.handle]! - scene.points[ray.origin]!;
+    final fixed = scene.rays.where(
+      (r) => !r.rotatable && r.origin == ray.origin,
+    );
+    if (fixed.isNotEmpty) {
+      final reference = fixed.first;
+      return Geometry.directedAngle(
+            scene.points[reference.handle]! - scene.points[reference.origin]!,
+            vector,
+          ) ??
+          0;
+    }
     return angleFromVector(vector.x, vector.y) ?? 0;
   }
 

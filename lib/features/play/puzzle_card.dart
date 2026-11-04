@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../core/app_controller.dart';
 import '../../core/theme.dart';
 import '../../models/level.dart';
+import '../../models/learning_progress.dart';
+import '../../core/learning_explanation.dart';
 import 'puzzle_mechanics.dart';
 import '../../widgets/common.dart';
 
@@ -26,7 +28,7 @@ class PuzzleCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = controller.puzzle(level, review: review);
     final complete = state.isComplete;
-    final progress = controller.progress.forLevel(level.id);
+    final confirmed = controller.skill(level).state == SkillState.confirmed;
     return LayoutBuilder(
       builder: (context, constraints) {
         final largeText = MediaQuery.textScalerOf(context).scale(14) > 18;
@@ -48,7 +50,9 @@ class PuzzleCard extends StatelessWidget {
                 children: [
                   Tag(
                     review
-                        ? 'ЗАКРЕПЛЯЕМ'
+                        ? (controller.isScheduledReview
+                              ? 'ПОВТОРЕНИЕ'
+                              : 'ТРЕНИРОВКА')
                         : switch (level.topicId) {
                             'angles' => 'УГЛЫ',
                             'pythagoras' => 'ПИФАГОР',
@@ -208,11 +212,13 @@ class PuzzleCard extends StatelessWidget {
                     title: complete
                         ? (state.hintUsed
                               ? 'Решено с подсказкой'
-                              : progress.isMastered
+                              : confirmed
                               ? 'Навык закреплён!'
                               : 'Отличная работа!')
                         : 'Ещё немного',
-                    text: complete ? level.explanation : state.result!.feedback,
+                    text: complete
+                        ? learningExplanation(level, state)
+                        : state.result!.feedback,
                   ),
                 ),
                 const SizedBox(height: 12),

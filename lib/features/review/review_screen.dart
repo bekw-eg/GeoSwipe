@@ -2,12 +2,21 @@ import 'package:flutter/material.dart';
 import '../../core/app_controller.dart';
 import '../../core/theme.dart';
 import '../../data/level_catalog.dart';
+import '../../models/learning_progress.dart';
 import '../../widgets/common.dart';
 import '../play/puzzle_card.dart';
 
 class ReviewScreen extends StatelessWidget {
   const ReviewScreen({super.key, required this.controller});
   final AppController controller;
+  String _dueLabel(String id) {
+    final skill = controller.progress.forSkill(id);
+    final due = skill.dueAt?.toLocal();
+    if (due == null) return 'Срок ещё не назначен';
+    if (skill.isDue(controller.now)) return 'Пора повторить';
+    return 'Повторить: ${due.day.toString().padLeft(2, '0')}.${due.month.toString().padLeft(2, '0')}.${due.year} ${due.hour.toString().padLeft(2, '0')}:${due.minute.toString().padLeft(2, '0')}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final current = controller.reviewLevel;
@@ -27,7 +36,7 @@ class ReviewScreen extends StatelessWidget {
               key: ValueKey(controller.reviewRevision),
               controller: controller,
               level: current,
-              number: levels.indexOf(current) + 1,
+              number: levels.indexWhere((l) => l.id == current.id) + 1,
               total: levels.length,
               onNext: controller.closeReview,
               review: true,
@@ -66,12 +75,12 @@ class ReviewScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Закрепим результат?',
+                  'К повторению: ${controller.dueLevels.length}',
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 const SizedBox(height: 10),
                 const Text(
-                  'Начнём с задачи, которой нужно больше внимания. Самостоятельное решение и повторение подтверждают освоение.',
+                  'Повторяем через 1, 3 и 7 дней. Новые данные проверяют тот же принцип. Ранняя тренировка доступна, но не продвигает расписание.',
                   style: TextStyle(color: AppColors.muted, fontSize: 13),
                 ),
                 const SizedBox(height: 22),
@@ -80,7 +89,11 @@ class ReviewScreen extends StatelessWidget {
                   child: FilledButton.icon(
                     onPressed: () => controller.startReview(),
                     icon: const Icon(Icons.play_arrow_rounded),
-                    label: const Text('Начать повторение'),
+                    label: Text(
+                      controller.dueLevels.isEmpty
+                          ? 'Тренироваться заранее'
+                          : 'Начать повторение',
+                    ),
                   ),
                 ),
               ],
@@ -107,7 +120,7 @@ class ReviewScreen extends StatelessWidget {
                     vertical: 6,
                   ),
                   leading: Icon(
-                    controller.progress.forLevel(level.id).isMastered
+                    controller.skill(level).state == SkillState.confirmed
                         ? Icons.verified_outlined
                         : Icons.rotate_right,
                     color: AppColors.mint,
@@ -120,9 +133,7 @@ class ReviewScreen extends StatelessWidget {
                     ),
                   ),
                   subtitle: Text(
-                    controller.progress.forLevel(level.id).isMastered
-                        ? 'Навык освоен'
-                        : 'Готово к закреплению',
+                    '${controller.skill(level).state.label}\n${_dueLabel(level.id)}',
                     style: const TextStyle(
                       color: AppColors.muted,
                       fontSize: 12,

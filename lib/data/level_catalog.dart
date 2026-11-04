@@ -1,3 +1,4 @@
+import 'lesson_help.dart';
 import 'dart:math' as math;
 import '../models/level.dart';
 import '../models/math_topic.dart';
@@ -9,8 +10,9 @@ import 'lesson_scenes.dart';
 
 // Retain earlier IDs only for compatible tasks; retired IDs remain in saves.
 final levels = List<Level>.unmodifiable([
-  const Level(
+  Level(
     id: 'angle-45',
+    guidedHints: lessonHints['angle-45'],
     topicId: 'angles',
     title: 'Поймай угол',
     stage: LearningStage.explore,
@@ -22,10 +24,11 @@ final levels = List<Level>.unmodifiable([
     hint: 'Измеряем поворот от OA к OB. Острый угол меньше 90°.',
     extraHints: ['Представь половину прямого угла.'],
     explanation:
-        '45° — половина прямого угла. Это острый угол: 0° < 45° < 90°.',
+        'α = 90° / 2 = 45° — половина прямого угла. Это острый угол: 0° < 45° < 90°.',
   ),
-  const Level(
+  Level(
     id: 'angle-90',
+    guidedHints: lessonHints['angle-90'],
     topicId: 'angles',
     title: 'Прямой поворот',
     stage: LearningStage.rule,
@@ -38,8 +41,9 @@ final levels = List<Level>.unmodifiable([
     hint: 'Полный оборот — 360°. Раздели его на четыре равные части.',
     explanation: '360° / 4 = 90°. Стороны прямого угла перпендикулярны.',
   ),
-  const Level(
+  Level(
     id: 'angle-135',
+    guidedHints: lessonHints['angle-135'],
     topicId: 'angles',
     title: 'Шире прямого',
     stage: LearningStage.explore,
@@ -58,6 +62,7 @@ final levels = List<Level>.unmodifiable([
   ),
   Level(
     id: 'angle-complement',
+    guidedHints: lessonHints['angle-complement'],
     topicId: 'angles',
     title: 'Дополни до прямого',
     stage: LearningStage.rule,
@@ -76,6 +81,7 @@ final levels = List<Level>.unmodifiable([
   ),
   Level(
     id: 'angle-supplement',
+    guidedHints: lessonHints['angle-supplement'],
     topicId: 'angles',
     title: 'Смежные углы',
     kind: PuzzleKind.numericAnswer,
@@ -94,6 +100,7 @@ final levels = List<Level>.unmodifiable([
   ),
   Level(
     id: 'triangle-angle-sum',
+    guidedHints: lessonHints['triangle-angle-sum'],
     topicId: 'angles',
     title: 'Третий угол',
     stage: LearningStage.rule,
@@ -115,6 +122,7 @@ final levels = List<Level>.unmodifiable([
   ),
   Level(
     id: 'triangle-isosceles',
+    guidedHints: lessonHints['triangle-isosceles'],
     topicId: 'angles',
     title: 'Равные стороны',
     stage: LearningStage.explore,
@@ -142,6 +150,7 @@ final levels = List<Level>.unmodifiable([
   ),
   Level(
     id: 'triangle-base-angle',
+    guidedHints: lessonHints['triangle-base-angle'],
     topicId: 'angles',
     title: 'Углы при основании',
     kind: PuzzleKind.numericAnswer,
@@ -169,6 +178,7 @@ final levels = List<Level>.unmodifiable([
   ),
   Level(
     id: 'triangle-exterior',
+    guidedHints: lessonHints['triangle-exterior'],
     topicId: 'angles',
     title: 'Снаружи треугольника',
     stage: LearningStage.rule,
@@ -188,6 +198,7 @@ final levels = List<Level>.unmodifiable([
   ),
   Level(
     id: 'triangle-combined',
+    guidedHints: lessonHints['triangle-combined'],
     topicId: 'angles',
     title: 'Две идеи вместе',
     stage: LearningStage.challenge,
@@ -216,6 +227,7 @@ final levels = List<Level>.unmodifiable([
   ),
   Level(
     id: 'triangle-right',
+    guidedHints: lessonHints['triangle-right'],
     topicId: 'pythagoras',
     title: 'Создай прямой угол',
     stage: LearningStage.explore,
@@ -243,6 +255,7 @@ final levels = List<Level>.unmodifiable([
   ),
   Level(
     id: 'pythagoras-legs',
+    guidedHints: lessonHints['pythagoras-legs'],
     topicId: 'pythagoras',
     title: 'Узнай катеты',
     stage: LearningStage.rule,
@@ -266,6 +279,7 @@ final levels = List<Level>.unmodifiable([
   ),
   Level(
     id: 'pythagoras-squares',
+    guidedHints: lessonHints['pythagoras-squares'],
     topicId: 'pythagoras',
     title: 'Квадраты на сторонах',
     stage: LearningStage.rule,
@@ -285,6 +299,7 @@ final levels = List<Level>.unmodifiable([
   ),
   Level(
     id: 'pythagoras-3-4',
+    guidedHints: lessonHints['pythagoras-3-4'],
     topicId: 'pythagoras',
     title: 'Неизвестная гипотенуза',
     kind: PuzzleKind.numericAnswer,
@@ -306,6 +321,7 @@ final levels = List<Level>.unmodifiable([
   ),
   Level(
     id: 'pythagoras-missing-leg',
+    guidedHints: lessonHints['pythagoras-missing-leg'],
     topicId: 'pythagoras',
     title: 'Верни катет',
     kind: PuzzleKind.numericAnswer,
@@ -328,6 +344,7 @@ final levels = List<Level>.unmodifiable([
   ),
   Level(
     id: 'pythagoras-construct',
+    guidedHints: lessonHints['pythagoras-construct'],
     topicId: 'pythagoras',
     title: 'Прямой и равнобедренный',
     stage: LearningStage.explore,
@@ -359,6 +376,7 @@ final levels = List<Level>.unmodifiable([
   ),
   Level(
     id: 'pythagoras-diagonal',
+    guidedHints: lessonHints['pythagoras-diagonal'],
     topicId: 'pythagoras',
     title: 'Диагональ экрана',
     kind: PuzzleKind.numericAnswer,
@@ -380,6 +398,7 @@ final levels = List<Level>.unmodifiable([
   ),
   Level(
     id: 'pythagoras-distance',
+    guidedHints: lessonHints['pythagoras-distance'],
     topicId: 'pythagoras',
     title: 'Напрямик по карте',
     kind: PuzzleKind.numericAnswer,
@@ -407,6 +426,7 @@ final levels = List<Level>.unmodifiable([
   ),
   Level(
     id: 'pythagoras-ladder',
+    guidedHints: lessonHints['pythagoras-ladder'],
     topicId: 'pythagoras',
     title: 'Лестница у стены',
     kind: PuzzleKind.numericAnswer,
@@ -428,6 +448,7 @@ final levels = List<Level>.unmodifiable([
   ),
   Level(
     id: 'pythagoras-combined',
+    guidedHints: lessonHints['pythagoras-combined'],
     topicId: 'pythagoras',
     title: 'Высота крыши',
     stage: LearningStage.challenge,
@@ -447,6 +468,7 @@ final levels = List<Level>.unmodifiable([
   ),
   Level(
     id: 'trig-side-ratio',
+    guidedHints: lessonHints['trig-side-ratio'],
     topicId: 'trigonometry',
     title: 'Стороны относительно угла',
     stage: LearningStage.explore,
@@ -480,6 +502,7 @@ final levels = List<Level>.unmodifiable([
   ),
   Level(
     id: 'trig-sine',
+    guidedHints: lessonHints['trig-sine'],
     topicId: 'trigonometry',
     title: 'Первый синус',
     stage: LearningStage.rule,
@@ -505,6 +528,7 @@ final levels = List<Level>.unmodifiable([
   ),
   Level(
     id: 'trig-cosine',
+    guidedHints: lessonHints['trig-cosine'],
     topicId: 'trigonometry',
     title: 'Первый косинус',
     stage: LearningStage.rule,
@@ -530,6 +554,7 @@ final levels = List<Level>.unmodifiable([
   ),
   Level(
     id: 'trig-tangent',
+    guidedHints: lessonHints['trig-tangent'],
     topicId: 'trigonometry',
     title: 'Первый тангенс',
     stage: LearningStage.rule,
@@ -555,6 +580,7 @@ final levels = List<Level>.unmodifiable([
   ),
   Level(
     id: 'trig-scale',
+    guidedHints: lessonHints['trig-scale'],
     topicId: 'trigonometry',
     title: 'Сохрани синус',
     stage: LearningStage.explore,
@@ -590,8 +616,9 @@ final levels = List<Level>.unmodifiable([
     explanation:
         'Подходят катеты 8 и 6 с гипотенузой 10: sin α = 6 / 10 = 0,6. Это удвоенный треугольник 3–4–5. Отражение тоже подходит.',
   ),
-  const Level(
+  Level(
     id: 'trig-standard-angle',
+    guidedHints: lessonHints['trig-standard-angle'],
     topicId: 'trigonometry',
     title: 'Угол по косинусу',
     stage: LearningStage.explore,
@@ -611,6 +638,7 @@ final levels = List<Level>.unmodifiable([
   ),
   Level(
     id: 'trig-length',
+    guidedHints: lessonHints['trig-length'],
     topicId: 'trigonometry',
     title: 'Катет напротив 30°',
     kind: PuzzleKind.numericAnswer,
@@ -635,6 +663,7 @@ final levels = List<Level>.unmodifiable([
   ),
   Level(
     id: 'trig-function',
+    guidedHints: lessonHints['trig-function'],
     topicId: 'trigonometry',
     title: 'Выбери отношение',
     kind: PuzzleKind.numericAnswer,
@@ -660,6 +689,7 @@ final levels = List<Level>.unmodifiable([
   ),
   Level(
     id: 'trig-application',
+    guidedHints: lessonHints['trig-application'],
     topicId: 'trigonometry',
     title: 'Высота по тени',
     kind: PuzzleKind.numericAnswer,
@@ -688,6 +718,7 @@ final levels = List<Level>.unmodifiable([
   ),
   Level(
     id: 'trig-final',
+    guidedHints: lessonHints['trig-final'],
     topicId: 'trigonometry',
     title: 'Полёт дрона',
     stage: LearningStage.challenge,

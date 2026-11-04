@@ -5,14 +5,17 @@ import 'package:geoswipe/data/level_catalog.dart';
 import 'package:geoswipe/data/progress_repository.dart';
 import 'package:geoswipe/models/progress.dart';
 import 'support/memory_store.dart';
+import 'support/review_solutions.dart';
 import 'support/course_solutions.dart';
 
 void main() {
   late MemoryStore store;
   late AppController controller;
+  late DateTime time;
   setUp(() async {
     store = MemoryStore();
-    controller = AppController(ProgressRepository(store));
+    time = DateTime.utc(2026, 10, 16);
+    controller = AppController(ProgressRepository(store), clock: () => time);
     await controller.load();
   });
   tearDown(() async {
@@ -59,17 +62,21 @@ void main() {
     expect(controller.masteredCount, 0);
     expect(controller.progress.forLevel(level.id).independentCompletions, 0);
   });
-  test('mastery requires two independent solves including a fresh review', () {
+  test('mastery requires three scheduled independent reviews', () {
     final level = levels.first;
     controller.rotate(level, 45);
     controller.submit(level);
     expect(controller.masteredCount, 0);
-    controller.startReview();
-    expect(controller.puzzle(level, review: true).isComplete, isFalse);
-    controller.rotate(level, 45, review: true);
-    controller.submit(level, review: true);
+    for (var i = 0; i < 3; i++) {
+      time = controller.skill(level).dueAt!;
+      controller.startReview();
+      final review = controller.reviewLevel!;
+      expect(controller.puzzle(review, review: true).isComplete, isFalse);
+      solveReview(controller);
+      controller.submit(review, review: true);
+    }
     expect(controller.masteredCount, 1);
-    expect(controller.totalAttempts, 2);
+    expect(controller.totalAttempts, 4);
   });
   test('assisted review and repeated play alone cannot confirm mastery', () {
     final level = levels.first;
@@ -80,22 +87,23 @@ void main() {
     }
     expect(controller.masteredCount, 0);
     controller.startReview();
-    controller.showHint(level, review: true);
-    controller.rotate(level, 45, review: true);
-    controller.submit(level, review: true);
+    controller.showHint(controller.reviewLevel!, review: true);
+    solveReview(controller);
+    controller.submit(controller.reviewLevel!, review: true);
     expect(controller.masteredCount, 0);
   });
-  test('review prioritizes completed levels not yet mastered', () {
+  test('review prioritizes the earliest scheduled skill', () {
     for (final level in levels.take(2)) {
       controller.rotate(level, level.targetAngle);
       controller.submit(level);
     }
+    time = time.add(const Duration(days: 1));
     controller.startReview(levelId: levels.first.id);
-    controller.rotate(levels.first, 45, review: true);
-    controller.submit(levels.first, review: true);
+    solveReview(controller);
+    controller.submit(controller.reviewLevel!, review: true);
     controller.closeReview();
     controller.startReview();
-    expect(controller.reviewLevel, levels[1]);
+    expect(controller.reviewLevel!.id, levels[1].id);
   });
   test(
     'round trip restores progress and last visited level after restart',

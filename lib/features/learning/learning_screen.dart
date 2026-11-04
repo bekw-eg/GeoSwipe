@@ -3,6 +3,7 @@ import '../../core/app_controller.dart';
 import '../../core/theme.dart';
 import '../../data/level_catalog.dart';
 import '../../models/progress.dart';
+import '../../models/learning_progress.dart';
 import '../../widgets/common.dart';
 
 class LearningScreen extends StatelessWidget {
@@ -82,6 +83,7 @@ class LearningScreen extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 9),
               child: _LevelTile(
                 index: i,
+                skill: controller.skill(levels[i]),
                 progress: controller.progress.forLevel(levels[i].id),
                 unlocked: controller.isUnlocked(i),
                 onTap: () => controller.openLevel(i),
@@ -97,29 +99,25 @@ class _LevelTile extends StatelessWidget {
   const _LevelTile({
     required this.index,
     required this.progress,
+    required this.skill,
     required this.onTap,
     required this.unlocked,
   });
   final int index;
   final LevelProgress progress;
+  final SkillProgress skill;
   final VoidCallback onTap;
   final bool unlocked;
   @override
   Widget build(BuildContext context) {
-    final color = progress.isMastered
+    final color = (skill.state == SkillState.confirmed)
         ? AppColors.mint
         : progress.isAssistedOnly
         ? AppColors.warning
         : AppColors.violet;
     final status = !unlocked
         ? 'Сначала: ${levels.firstWhere((l) => l.id == levels[index].prerequisiteIds.first).title}'
-        : progress.isMastered
-        ? 'Освоено'
-        : progress.isAssistedOnly
-        ? 'С подсказкой'
-        : progress.isCompleted
-        ? 'Решено · закрепи в повторении'
-        : 'Можно начать';
+        : skill.state.label;
     return Material(
       color: AppColors.surface,
       borderRadius: BorderRadius.circular(18),
@@ -142,7 +140,7 @@ class _LevelTile extends StatelessWidget {
                     ? const Icon(Icons.lock_outline, color: AppColors.muted)
                     : progress.isCompleted
                     ? Icon(
-                        progress.isMastered
+                        (skill.state == SkillState.confirmed)
                             ? Icons.verified_outlined
                             : Icons.check,
                         color: color,

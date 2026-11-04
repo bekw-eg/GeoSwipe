@@ -1,3 +1,4 @@
+import 'support/review_solutions.dart';
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geoswipe/core/app_controller.dart';
@@ -73,11 +74,14 @@ void main() {
       expect(controller.assistedCount, 15);
       for (final level in levels) {
         controller.startReview(levelId: level.id);
-        enterSolution(controller, level, review: true);
-        expect(controller.submit(level, review: true).isCorrect, isTrue);
+        solveReview(controller);
+        expect(
+          controller.submit(controller.reviewLevel!, review: true).isCorrect,
+          isTrue,
+        );
       }
-      // Only tasks with a previous independent completion have demonstrated mastery.
-      expect(controller.masteredCount, 15);
+      // Immediate practice never confirms spaced mastery.
+      expect(controller.masteredCount, 0);
       await controller.persist();
       controller.dispose();
     },
