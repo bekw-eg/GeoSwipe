@@ -110,4 +110,19 @@ class PostgresApiProgressStore implements ProgressStore {
       return false;
     }
   }
+
+  /// Sends a DELETE request to clear remote progress in PostgreSQL backend
+  /// and clears local fallback store.
+  Future<bool> deleteProgress() async {
+    await localStore.write('');
+    if (token == null || token!.isEmpty) return true;
+    try {
+      final response = await _client
+          .delete(_uri('/api/progress'), headers: _headers)
+          .timeout(const Duration(seconds: 4));
+      return response.statusCode == 200 || response.statusCode == 204;
+    } catch (_) {
+      return false;
+    }
+  }
 }

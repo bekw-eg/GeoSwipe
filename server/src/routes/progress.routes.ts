@@ -340,3 +340,20 @@ progressRouter.get('/history', async (req: AuthenticatedRequest, res: Response, 
     next(error);
   }
 });
+
+// DELETE /api/progress - Resets all progress data for current user
+progressRouter.delete('/', async (req: AuthenticatedRequest, res: Response, next) => {
+  try {
+    const userId = req.user!.userId;
+    await prisma.$transaction(async (tx) => {
+      await tx.attemptRecord.deleteMany({ where: { userId } });
+      await tx.skillProgress.deleteMany({ where: { userId } });
+      await tx.levelProgress.deleteMany({ where: { userId } });
+      await tx.userProgressState.deleteMany({ where: { userId } });
+    });
+    res.json({ success: true, message: 'Прогресс сәтті жойылды (Progress deleted successfully)' });
+  } catch (error) {
+    next(error);
+  }
+});
+

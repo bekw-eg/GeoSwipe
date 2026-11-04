@@ -48,4 +48,13 @@ class ProgressRepository {
 
   Future<void> save(ProgressSnapshot snapshot) =>
       store.write(jsonEncode(snapshot.toJson()));
+
+  Future<bool> resetProgress() async {
+    final s = store;
+    if (s is PostgresApiProgressStore) {
+      return s.deleteProgress();
+    }
+    await store.write('');
+    return true;
+  }
 }

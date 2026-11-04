@@ -155,6 +155,9 @@ PostgreSQL деректер базасы Prisma ORM арқылы басқары�
   - Барлық шешілген деңгейлер тізімін қайтарады.
 - `GET /api/progress/history?limit=50&offset=0`:
   - Пагинациясы бар талпыныстар тарихы.
+- `DELETE /api/progress`:
+  - Пайдаланушының барлық прогресс жазбаларын (attemptRecord, skillProgress, levelProgress, userProgressState) дерекқордан тазалап, сброс жасайды.
+
 
 ---
 

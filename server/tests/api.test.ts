@@ -215,5 +215,22 @@ describe('GeoSwipe PostgreSQL Backend API Test Suite', () => {
       // Student has no level attempts for angle-45
       assert.equal(res.body.levels['angle-45'], undefined);
     });
+
+    test('DELETE /api/progress resets and removes user progress data', async () => {
+      const delRes = await request(app)
+        .delete('/api/progress')
+        .set('Authorization', `Bearer ${authToken}`);
+
+      assert.equal(delRes.status, 200);
+      assert.equal(delRes.body.success, true);
+
+      // Verify empty progress
+      const checkRes = await request(app)
+        .get('/api/progress')
+        .set('Authorization', `Bearer ${authToken}`);
+
+      assert.equal(checkRes.status, 200);
+      assert.deepEqual(checkRes.body.levels, {});
+    });
   });
 });

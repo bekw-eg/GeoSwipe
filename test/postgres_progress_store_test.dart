@@ -147,10 +147,43 @@ void main() {
     });
 
     test(
+      'deleteProgress sends DELETE request to clear remote progress',
+      () async {
+        var deleteCalled = false;
+        final local = MemoryProgressStore()..value = '{"version":1}';
+        final client = MockClient((request) async {
+          if (request.method == 'DELETE' &&
+              request.url.path == '/api/progress') {
+            deleteCalled = true;
+            expect(request.headers['Authorization'], 'Bearer test-jwt-token');
+            return http.Response('{"success":true}', 200);
+          }
+          return http.Response('Bad request', 400);
+        });
+
+        final store = PostgresApiProgressStore(
+          baseUrl: 'http://localhost:4000',
+          token: 'test-jwt-token',
+          localFallback: local,
+          client: client,
+        );
+
+        final success = await store.deleteProgress();
+        expect(success, isTrue);
+        expect(deleteCalled, isTrue);
+        expect(local.value, isEmpty);
+      },
+    );
+
+    test(
       'ProgressRepository works seamlessly with PostgresApiProgressStore',
       () async {
         final local = MemoryProgressStore();
         final client = MockClient((request) async {
+          if (request.method == 'DELETE' &&
+              request.url.path == '/api/progress') {
+            return http.Response('{"success":true}', 200);
+          }
           return http.Response(
             jsonEncode({
               'version': 1,
@@ -181,6 +214,9 @@ void main() {
 
         expect(snapshot.lastLevelId, 'pythagoras-3-4');
         expect(snapshot.forLevel('pythagoras-3-4').isCompleted, isTrue);
+
+        final resetSuccess = await repo.resetProgress();
+        expect(resetSuccess, isTrue);
       },
     );
   });
